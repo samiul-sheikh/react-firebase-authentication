@@ -12,6 +12,7 @@ function App() {
         isSignedIn: false,
         name: '',
         email: '',
+        password: '',
         photo: ''
     })
 
@@ -58,15 +59,21 @@ function App() {
     }
 
     const handleBlur = (e) => {
-        console.log(e.target.name, e.target.value);
+        // console.log(e.target.name, e.target.value);
+        let isFormValid = true;
         if (e.target.name === 'email') {
-            const isEmailValid = /\S+@\S+\.\S+/.test(e.target.value);
-            console.log(isEmailValid);
+            isFormValid = /\S+@\S+\.\S+/.test(e.target.value);
+            // console.log(isEmailValid);
         }
         if (e.target.name === 'password') {
             const isPasswordValid = e.target.value.length > 6;
             const passwordHasNumber = /\d{1}/.test(e.target.value);
-            console.log(isPasswordValid && passwordHasNumber);
+            isFormValid = isPasswordValid && passwordHasNumber;
+        }
+        if (isFormValid) {
+            const newUserInfo = { ...user };
+            newUserInfo[e.target.name] = e.target.value;
+            setUser(newUserInfo);
         }
     }
 
@@ -89,7 +96,12 @@ function App() {
             }
 
             <h1>Our own authentication</h1>
+            <p>Name : {user.name}</p>
+            <p>Email: {user.email}</p>
+            <p>Password: {user.password}</p>
             <form onSubmit={handleSubmit}>
+                <input name="name" type="text" onBlur={handleBlur} placeholder="your name" />
+                <br />
                 <input type="text" name="email" onBlur={handleBlur} placeholder="enter your email address" required />
                 <br />
                 <input type="password" name="password" onBlur={handleBlur} placeholder="enter your password" required />
