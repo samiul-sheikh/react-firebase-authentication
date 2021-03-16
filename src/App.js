@@ -4,7 +4,9 @@ import "firebase/auth";
 import firebaseConfig from './firebase.config';
 import { useState } from 'react';
 
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
 function App() {
 
@@ -23,7 +25,6 @@ function App() {
 
         firebase.auth().signInWithPopup(provider)
             .then(response => {
-                // console.log(response);
                 const { displayName, email, photoURL } = response.user;
                 const signedInUser = {
                     isSignedIn: true,
@@ -78,15 +79,14 @@ function App() {
     }
 
     const handleSubmit = (e) => {
-        // console.log(user.email, user.password);
         if (newUser && user.email && user.password) {
-            // console.log('submitting');
             firebase.auth().createUserWithEmailAndPassword(user.email, user.password)
                 .then(response => {
                     const newUserInfo = { ...user };
                     newUserInfo.error = '';
                     newUserInfo.success = true;
                     setUser(newUserInfo);
+                    updateUserInfo(user.name)
                 })
 
                 .catch(error => {
@@ -104,6 +104,7 @@ function App() {
                     newUserInfo.error = '';
                     newUserInfo.success = true;
                     setUser(newUserInfo);
+                    console.log('sign in user info', response.user);
                 })
                 .catch((error) => {
                     const newUserInfo = { ...user };
@@ -114,6 +115,18 @@ function App() {
         }
 
         e.preventDefault();
+    }
+
+    const updateUserInfo = name => {
+        const user = firebase.auth().currentUser;
+
+        user.updateProfile({
+            displayName: name
+        }).then(function () {
+            console.log('user name update successfully');
+        }).catch(function (error) {
+            console.log('an error happened');
+        });
     }
 
     return (
@@ -140,7 +153,7 @@ function App() {
                 <br />
                 <input type="password" name="password" onBlur={handleBlur} placeholder="enter your password" required />
                 <br />
-                <input type="submit" value="submit" />
+                <input type="submit" value={newUser ? 'sign up' : 'sign in'} />
             </form>
             <p style={{ color: 'red' }}>{user.error}</p>
             {
