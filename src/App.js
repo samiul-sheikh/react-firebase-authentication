@@ -8,6 +8,7 @@ firebase.initializeApp(firebaseConfig);
 
 function App() {
 
+    const [newUser, setNewUser] = useState(false);
     const [user, setUser] = useState({
         isSignedIn: false,
         name: '',
@@ -21,9 +22,9 @@ function App() {
     const handleSignIn = () => {
 
         firebase.auth().signInWithPopup(provider)
-            .then(result => {
-                // console.log(result);
-                const { displayName, email, photoURL } = result.user;
+            .then(response => {
+                // console.log(response);
+                const { displayName, email, photoURL } = response.user;
                 const signedInUser = {
                     isSignedIn: true,
                     name: displayName,
@@ -41,7 +42,7 @@ function App() {
 
     const handleSignOut = () => {
         firebase.auth().signOut()
-            .then(result => {
+            .then(response => {
                 const signedOutUser = {
                     isSignedIn: false,
                     name: '',
@@ -51,7 +52,7 @@ function App() {
                     success: false
                 }
                 setUser(signedOutUser);
-                console.log(result);
+                console.log(response);
             })
             .catch(error => {
                 console.log(error);
@@ -78,10 +79,10 @@ function App() {
 
     const handleSubmit = (e) => {
         // console.log(user.email, user.password);
-        if (user.email && user.password) {
+        if (newUser && user.email && user.password) {
             // console.log('submitting');
             firebase.auth().createUserWithEmailAndPassword(user.email, user.password)
-                .then(result => {
+                .then(response => {
                     const newUserInfo = { ...user };
                     newUserInfo.error = '';
                     newUserInfo.success = true;
@@ -95,6 +96,23 @@ function App() {
                     setUser(newUserInfo);
                 });
         }
+
+        if (!newUser && user.email && user.password) {
+            firebase.auth().signInWithEmailAndPassword(user.email, user.password)
+                .then(response => {
+                    const newUserInfo = { ...user };
+                    newUserInfo.error = '';
+                    newUserInfo.success = true;
+                    setUser(newUserInfo);
+                })
+                .catch((error) => {
+                    const newUserInfo = { ...user };
+                    newUserInfo.error = error.message;
+                    newUserInfo.success = false;
+                    setUser(newUserInfo);
+                });
+        }
+
         e.preventDefault();
     }
 
@@ -113,8 +131,10 @@ function App() {
             }
 
             <h1>Our own authentication</h1>
+            <input type="checkbox" onChange={() => setNewUser(!newUser)} name="newUser" id="" />
+            <label htmlFor="newUser">new user sign up</label>
             <form onSubmit={handleSubmit}>
-                <input name="name" type="text" onBlur={handleBlur} placeholder="your name" />
+                {newUser && <input name="name" type="text" onBlur={handleBlur} placeholder="your name" />}
                 <br />
                 <input type="text" name="email" onBlur={handleBlur} placeholder="enter your email address" required />
                 <br />
@@ -124,7 +144,7 @@ function App() {
             </form>
             <p style={{ color: 'red' }}>{user.error}</p>
             {
-                user.success && <p style={{ color: 'green' }}>user created successfully</p>
+                user.success && <p style={{ color: 'green' }}>user {newUser ? 'created' : 'logged in'} successfully</p>
             }
         </div>
     );
